@@ -38,7 +38,7 @@ static NSUInteger const kNumberOfSections = 2;
 static NSUInteger const kNumberOfAvailableOperations = 2;
 static CGFloat const kOperationCellHeight = 44;
 static CGFloat const kBeaconCellHeight = 52;
-static NSString * const kBeaconSectionTitle = @"Looking for beacons...";
+static NSString * const kBeaconSectionTitle = @"発信元を検索しています...";
 static CGPoint const kActivityIndicatorPosition = (CGPoint){205, 12};
 static NSString * const kBeaconsHeaderViewIdentifier = @"BeaconsHeader";
 
@@ -133,7 +133,8 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
         [self.beaconTableView deleteSections:deletedSections withRowAnimation:UITableViewRowAnimationFade];
     [self.beaconTableView endUpdates];
 
-    NSLog(@"Turned off ranging.");
+    NSLog(@"検索を終了しますね");
+    self.beaconTableView.backgroundColor = [UIColor whiteColor];
 }
 
 #pragma mark - Index path management
@@ -240,13 +241,34 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
     if (![CLLocationManager locationServicesEnabled]) {
-        NSLog(@"Couldn't turn on ranging: Location services are not enabled.");
+        
+        
+        //show realtime popup yokoshima
+        UIAlertView *alert = [[UIAlertView alloc]
+                              initWithTitle:@""
+                              message:@"位置情報サービスが有効ではありません。位置情報サービスを有効にしてください。"
+                              delegate:self
+                              cancelButtonTitle:@"OK"
+                              otherButtonTitles:nil];
+        [alert show];
+        
+        NSLog(@"Couldn't turn on ranging: 位置情報サービスが有効ではありません");
         self.rangingSwitch.on = NO;
         return;
     }
     
     if ([CLLocationManager authorizationStatus] != kCLAuthorizationStatusAuthorized) {
-        NSLog(@"Couldn't turn on ranging: Location services not authorised.");
+
+        //show realtime popup yokoshima
+        UIAlertView *alert = [[UIAlertView alloc]
+                              initWithTitle:@""
+                              message:@"位置情報サービスが許可されていません。位置情報サービスを有効にしてください。"
+                              delegate:self
+                              cancelButtonTitle:@"OK"
+                              otherButtonTitles:nil];
+        [alert show];
+        
+        NSLog(@"Couldn't turn on ranging: 位置情報サービスが許可されていません");
         self.rangingSwitch.on = NO;
         return;
     }
@@ -260,10 +282,11 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
     NSArray *filteredBeacons = [self filteredBeacons:beacons];
     
     if (filteredBeacons.count == 0) {
-        NSLog(@"No beacons found nearby.");
+//        NSLog(@"近くに発信元はないみたいです..");
+        self.beaconTableView.backgroundColor = [UIColor cyanColor];
     } else {
-        NSLog(@"Found %lu %@.", (unsigned long)[filteredBeacons count],
-                [filteredBeacons count] > 1 ? @"beacons" : @"beacon");
+        NSLog(@"%lu発信元が見つかりました。%@.", (unsigned long)[filteredBeacons count],
+                [filteredBeacons count] > 1 ? @"複数の" : @"");
     }
     
     NSIndexSet *insertedSections = [self insertedSections];
@@ -308,7 +331,7 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
     NSDictionary *beaconPeripheralData = [region peripheralDataWithMeasuredPower:nil];
     [self.peripheralManager startAdvertising:beaconPeripheralData];
     
-    NSLog(@"Turning on advertising for region: %@.", region);
+    NSLog(@"発信元として動作開始します: %@.", region);
 }
 
 - (void)changeAdvertisingState:sender
@@ -323,7 +346,7 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
 
 - (void)startAdvertisingBeacon
 {
-    NSLog(@"Turning on advertising...");
+    NSLog(@"発信を開始します");
     
     [self createBeaconRegion];
     
@@ -337,20 +360,20 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
 {
     [self.peripheralManager stopAdvertising];
     
-    NSLog(@"Turned off advertising.");
+    NSLog(@"発信を終了します");
 }
 
 #pragma mark - Beacon advertising delegate methods
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheralManager error:(NSError *)error
 {
     if (error) {
-        NSLog(@"Couldn't turn on advertising: %@", error);
+        NSLog(@"発信を開始できませんでした: %@", error);
         self.advertisingSwitch.on = NO;
         return;
     }
     
     if (peripheralManager.isAdvertising) {
-        NSLog(@"Turned on advertising.");
+        NSLog(@"発信を開始しました");
         self.advertisingSwitch.on = YES;
     }
 }
@@ -373,17 +396,21 @@ typedef NS_ENUM(NSUInteger, NTOperationsRow) {
     NSString *proximity;
     switch (beacon.proximity) {
         case CLProximityNear:
-            proximity = @"Near";
+            proximity = @"近いです！";
+            self.beaconTableView.backgroundColor = [UIColor blueColor];
             break;
         case CLProximityImmediate:
-            proximity = @"Immediate";
+            proximity = @"超近いっｗ";
+            self.beaconTableView.backgroundColor = [UIColor greenColor];
             break;
         case CLProximityFar:
-            proximity = @"Far";
+            proximity = @"遠いです。。";
+            self.beaconTableView.backgroundColor = [UIColor yellowColor];
             break;
         case CLProximityUnknown:
         default:
-            proximity = @"Unknown";
+            proximity = @"見つかりません..";
+            self.beaconTableView.backgroundColor = [UIColor grayColor];
             break;
     }
     

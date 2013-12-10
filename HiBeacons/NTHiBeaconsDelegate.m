@@ -30,6 +30,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+
     return YES;
 }
 
@@ -37,20 +39,53 @@
 {
 }
 
+- (void)application:(UIApplication *) application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    notification.alertBody = @"backgroundからのlocalpushです。";
+    notification.alertAction = @"Open";
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+}
+
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    notification.alertBody = @"backgroundに移行しました。このままでは正常な動作は保証できません。";
+    notification.alertAction = @"Open";
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    UILocalNotification *notification = [[UILocalNotification alloc] init];
+//    notification.timeZone = [NSTimeZone defaultTimeZone];
+//    notification.alertBody = @"終了するとあの子の通知も届きません。今すぐ起動してください。";
+//    notification.alertAction = @"Open";
+//    notification.soundName = UILocalNotificationDefaultSoundName;
+//    
+//    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
 }
 
 @end
