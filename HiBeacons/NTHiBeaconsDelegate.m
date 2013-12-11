@@ -31,61 +31,60 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
-
     return YES;
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application
-{
 }
 
 - (void)application:(UIApplication *) application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
 {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-    
-    UILocalNotification *notification = [[UILocalNotification alloc] init];
-    notification.timeZone = [NSTimeZone defaultTimeZone];
-    notification.alertBody = @"backgroundからのlocalpushです。";
-    notification.alertAction = @"Open";
-    notification.soundName = UILocalNotificationDefaultSoundName;
-    
-    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    [self sendlocalPush:@"backgroundからのlocalpushです。"];
 }
 
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    
-    UILocalNotification *notification = [[UILocalNotification alloc] init];
-    notification.timeZone = [NSTimeZone defaultTimeZone];
-    notification.alertBody = @"backgroundに移行しました。このままでは正常な動作は保証できません。";
-    notification.alertAction = @"Open";
-    notification.soundName = UILocalNotificationDefaultSoundName;
-    
-    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
-    
-}
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
+    [UIApplication sharedApplication].applicationIconBadgeNumber=0;
     NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
+    [UIApplication sharedApplication].applicationIconBadgeNumber=0;
     NSLog(@"%s", __PRETTY_FUNCTION__);
 }
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    [UIApplication sharedApplication].applicationIconBadgeNumber=0;
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    //アプリがバックグラウンドに移行した時によばれる
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    [self sendlocalPush:@"backgroundに移行しました。このままでは正常な動作は保証できません。"];
+    NSLog(@"%ld",(long)[UIApplication sharedApplication].applicationIconBadgeNumber);
+}
+
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-//    UILocalNotification *notification = [[UILocalNotification alloc] init];
-//    notification.timeZone = [NSTimeZone defaultTimeZone];
-//    notification.alertBody = @"終了するとあの子の通知も届きません。今すぐ起動してください。";
-//    notification.alertAction = @"Open";
-//    notification.soundName = UILocalNotificationDefaultSoundName;
-//    
-//    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+//    [self sendlocalPush:@"アプリが終了しました。このままでは正常な動作は保証できません。"];
+}
+
+- (void)sendlocalPush:(NSString *)message
+{
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    notification.alertBody = message;
+    notification.alertAction = @"Open";
+    notification.applicationIconBadgeNumber = [UIApplication sharedApplication].applicationIconBadgeNumber++;
+    notification.soundName = UILocalNotificationDefaultSoundName;
+    
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+
 }
 
 @end
